@@ -1,0 +1,89 @@
+import pathlib
+import sys
+import typing
+
+import click
+import qrcode
+import qrcode.constants
+import PIL.ImageOps
+import PIL.Image
+
+
+@click.command()
+@click.option("--data", help="The data to encode", required=False)
+@click.option(
+    "--logo",
+    help="The logo to use in the QR code",
+    type=click.Path(path_type=pathlib.Path, exists=True, dir_okay=False),
+)
+@click.option(
+    "--logo-ratio",
+    help="The 1/nth of the size of the image to make the logo.",
+    type=click.FloatRange(min=3),
+    default=3,
+)
+@click.option("--color", help="The color to make the qr code", default="black")
+@click.option(
+    "--back-color", help="The background color to make the qr code", default="white"
+)
+@click.option("--out", type=click.Path(path_type=pathlib.Path, dir_okay=False))
+@click.argument("data_file", required=False)
+def _cli(
+    data: str,
+    logo: typing.Optional[pathlib.Path],
+    logo_ratio: int,
+    color: str,
+    back_color: str,
+    out: pathlib.Path,
+    data_file: typing.Optional[str],
+):
+    """Create a branded QR code based on parameters.
+
+    --data or DATA_FILE must be passed. if DATA_FILE is a '-', then stdin is read.
+    """
+    if not ((data is None) ^ (data_file is None)):
+        raise click.BadArgumentUsage(
+            "Exactly one of --data or DATA_FILE must be passed."
+        )
+    if data_file:
+        data_lines = []
+        if data_file == "-":
+            for line in sys.stdin.read():
+                data_lines.append(line)
+            data = "\n".join(data_lines)
+        else:
+            data = pathlib.Path(data_file).read_text(encoding="UTF-8-sig")
+
+    QRcode = qrcode.QRCode(
+        # error_correction=qrcode.constants.ERROR_CORRECT_H
+    )
+
+    QRcode.add_data(data)
+    QRcode.make()
+
+    quick_response_image = QRcode.make_image(
+        fill_color=color, back_color=back_color
+    ).convert("RGB")
+
+    if logo:
+        logo_img = PIL.Image.open(logo)
+        if quick_response_image.size[0] < logo_img.size[0] * (logo_ratio // 2):
+            ratio = logo_ratio
+            logo_img = PIL.ImageOps.contain(
+                logo_img,
+                (
+                    int(quick_response_image.size[0] / ratio),
+                    int(quick_response_image.size[1] / ratio),
+                ),
+            )
+        pos = (
+            (quick_response_image.size[0] - logo_img.size[0]) // 2,
+            (quick_response_image.size[1] - logo_img.size[1]) // 2,
+        )
+        quick_response_image.paste(logo_img, pos)
+
+    quick_response_image.save(out)
+
+
+if __name__ == "__main__":
+    _cli()
