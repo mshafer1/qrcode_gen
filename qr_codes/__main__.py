@@ -55,7 +55,7 @@ def _cli(
             data = pathlib.Path(data_file).read_text(encoding="UTF-8-sig")
 
     QRcode = qrcode.QRCode(
-        # error_correction=qrcode.constants.ERROR_CORRECT_H
+        error_correction=qrcode.constants.ERROR_CORRECT_H
     )
 
     QRcode.add_data(data)
@@ -65,9 +65,11 @@ def _cli(
         fill_color=color, back_color=back_color
     ).convert("RGB")
 
+    quick_response_image = quick_response_image.resize((1024, 1024))    
+
     if logo:
         logo_img = PIL.Image.open(logo)
-        if quick_response_image.size[0] < logo_img.size[0] * (logo_ratio // 2):
+        if logo_img.size[0] > quick_response_image.size[0] // logo_ratio:
             ratio = logo_ratio
             logo_img = PIL.ImageOps.contain(
                 logo_img,
