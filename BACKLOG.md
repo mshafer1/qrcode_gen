@@ -1,0 +1,2 @@
+- Add support for embedded images
+- Figure out an alternative build system since Make is only practically available on Linux
