@@ -3,10 +3,10 @@ import sys
 import typing
 
 import click
+import PIL.Image
+import PIL.ImageOps
 import qrcode
 import qrcode.constants
-import PIL.ImageOps
-import PIL.Image
 
 
 @click.command()
@@ -23,9 +23,7 @@ import PIL.Image
     default=3,
 )
 @click.option("--color", help="The color to make the qr code", default="black")
-@click.option(
-    "--back-color", help="The background color to make the qr code", default="white"
-)
+@click.option("--back-color", help="The background color to make the qr code", default="white")
 @click.option("--out", type=click.Path(path_type=pathlib.Path, dir_okay=False))
 @click.argument("data_file", required=False)
 def _cli(
@@ -42,9 +40,7 @@ def _cli(
     --data or DATA_FILE must be passed. if DATA_FILE is a '-', then stdin is read.
     """
     if not ((data is None) ^ (data_file is None)):
-        raise click.BadArgumentUsage(
-            "Exactly one of --data or DATA_FILE must be passed."
-        )
+        raise click.BadArgumentUsage("Exactly one of --data or DATA_FILE must be passed.")
     if data_file:
         data_lines = []
         if data_file == "-":
@@ -54,18 +50,14 @@ def _cli(
         else:
             data = pathlib.Path(data_file).read_text(encoding="UTF-8-sig")
 
-    QRcode = qrcode.QRCode(
-        error_correction=qrcode.constants.ERROR_CORRECT_H
-    )
+    QRcode = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_H)
 
     QRcode.add_data(data)
     QRcode.make()
 
-    quick_response_image = QRcode.make_image(
-        fill_color=color, back_color=back_color
-    ).convert("RGB")
+    quick_response_image = QRcode.make_image(fill_color=color, back_color=back_color).convert("RGB")
 
-    quick_response_image = quick_response_image.resize((1024, 1024))    
+    quick_response_image = quick_response_image.resize((1024, 1024))
 
     if logo:
         logo_img = PIL.Image.open(logo)
