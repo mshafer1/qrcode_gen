@@ -7,9 +7,11 @@ import PIL.Image
 import PIL.ImageOps
 import qrcode
 import qrcode.constants
+from click_option_group import MutuallyExclusiveOptionGroup, optgroup
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import ImageColorMask
-from click_option_group import optgroup, MutuallyExclusiveOptionGroup, MutuallyExclusiveOptionGroup
+from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
+
 
 def _shared_args(wrapped):
     @optgroup("Data", cls=MutuallyExclusiveOptionGroup)
@@ -17,10 +19,12 @@ def _shared_args(wrapped):
     @optgroup.option("--data-file")
     @click.option("--back-color", help="The background color to make the qr code", default="white")
     @click.option("--out", type=click.Path(path_type=pathlib.Path, dir_okay=False), required=True)
+    @click.option("--rounded", is_flag=True, help="Round the corners of the output")
     def wrapper(*args, **kwargs):
         return wrapped(*args, **kwargs)
-    
+
     return wrapper
+
 
 @click.command("gen-qr-code")
 @click.option(
@@ -44,6 +48,7 @@ def _cli(
     back_color: str,
     out: pathlib.Path,
     data_file: typing.Optional[str],
+    rounded: bool,
 ):
     """Create a branded QR code based on parameters.
 
@@ -66,7 +71,13 @@ def _cli(
     QRcode.add_data(data)
     QRcode.make()
 
-    quick_response_image = QRcode.make_image(fill_color=color, back_color=back_color).convert("RGB")
+    module_drawer = None
+    if rounded:
+        module_drawer = RoundedModuleDrawer()
+
+    quick_response_image = QRcode.make_image(
+        fill_color=color, back_color=back_color, module_drawer=module_drawer
+    ).convert("RGB")
 
     quick_response_image = quick_response_image.resize((1024, 1024))
 
@@ -89,19 +100,23 @@ def _cli(
 
     quick_response_image.save(out)
 
+
 @click.command("image-as-qr")
 @click.option(
     "--logo",
     help="The logo to use in the QR code",
-    required=True, # the difference is this one is required
+    required=True,  # the difference is this one is required
     type=click.Path(path_type=pathlib.Path, exists=True, dir_okay=False),
 )
 @_shared_args
-def _render_image_as_qr_filler(data: str,
+def _render_image_as_qr_filler(
+    data: str,
     logo: pathlib.Path,
     back_color: str,
     out: pathlib.Path,
-    data_file: typing.Optional[str],):
+    data_file: typing.Optional[str],
+    rounded: bool,
+):
     if data_file:
         data_lines = []
         if data_file == "-":
@@ -116,10 +131,20 @@ def _render_image_as_qr_filler(data: str,
     QRcode.add_data(data)
     QRcode.make()
 
-    quick_response_image = QRcode.make_image(image_factory=StyledPilImage, color_mask=ImageColorMask(color_mask_path=str(logo.resolve())), back_color=back_color).convert("RGB")
+    module_drawer = None
+    if rounded:
+        module_drawer = RoundedModuleDrawer()
+
+    quick_response_image = QRcode.make_image(
+        image_factory=StyledPilImage,
+        color_mask=ImageColorMask(color_mask_path=str(logo.resolve())),
+        module_drawer=module_drawer,
+        back_color=back_color,
+    ).convert("RGB")
 
     quick_response_image = quick_response_image.resize((1024, 1024))
     quick_response_image.save(out)
+
 
 if __name__ == "__main__":
     _cli()
