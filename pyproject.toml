@@ -8,6 +8,7 @@ readme = "README.md"
 
 [tool.poetry.scripts]
 qr-code = "qr_codes.__main__:_cli"
+image-as-qr-code = "qr_codes.__main__:_render_image_as_qr_filler"
 
 [tool.poetry.dependencies]
 python = "^3.9"
