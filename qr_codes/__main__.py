@@ -7,10 +7,21 @@ import PIL.Image
 import PIL.ImageOps
 import qrcode
 import qrcode.constants
+from qrcode.image.styledpil import StyledPilImage
+from click_option_group import optgroup, MutuallyExclusiveOptionGroup, MutuallyExclusiveOptionGroup
 
+def _shared_args(wrapped):
+    @optgroup("Data", cls=MutuallyExclusiveOptionGroup)
+    @optgroup.option("--data", help="The data to encode")
+    @optgroup.option("--data-file")
+    @click.option("--back-color", help="The background color to make the qr code", default="white")
+    @click.option("--out", type=click.Path(path_type=pathlib.Path, dir_okay=False))
+    def wrapper(*args, **kwargs):
+        return wrapped(*args, **kwargs)
+    
+    return wrapper
 
-@click.command()
-@click.option("--data", help="The data to encode", required=False)
+@click.group(invoke_without_command=True)
 @click.option(
     "--logo",
     help="The logo to use in the QR code",
@@ -23,9 +34,7 @@ import qrcode.constants
     default=3,
 )
 @click.option("--color", help="The color to make the qr code", default="black")
-@click.option("--back-color", help="The background color to make the qr code", default="white")
-@click.option("--out", type=click.Path(path_type=pathlib.Path, dir_okay=False))
-@click.argument("data_file", required=False)
+@_shared_args
 def _cli(
     data: str,
     logo: typing.Optional[pathlib.Path],
