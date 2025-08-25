@@ -11,13 +11,13 @@ qr-code = "qr_codes.__main__:_cli"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-qrcode = {extras = ["pillow"], version = "^7.4.2"}
+qrcode = {extras = ["pillow"], version = "^8.2"}
 click = "^8.1.7"
-pillow = "^10.3.0"
+pillow = "^11.3.0"
 
 
 [tool.poetry.group.dev.dependencies]
-ni-python-styleguide = "^0.4.5"
+ni-python-styleguide = "^0.4.7"
 
 [build-system]
 requires = ["poetry-core"]
