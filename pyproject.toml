@@ -2,7 +2,7 @@
 name = "qr-codes"
 version = "0.1.0"
 description = "Utility to generate QR codes"
-authors = ["mshafer1"]
+authors = ["makerbynight <2565361+mshafer1@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
 
